@@ -35,6 +35,7 @@ CODEC = ".opus"
 
 
 def os_cmd(cmd):
+    #print(cmd)
     # shlex.split used for POSIX compatibility
     return cmd if sys.platform == "win32" else shlex.split(cmd)
 
@@ -69,24 +70,43 @@ def ffmpeg_crop(file):
     arg_output = "-f null -"
     arg_filters = f'-af "{AF_PASS},{AF_SILENCE_DETECT}"'
     cmd = f"{FFMPEG} {arg_input} {arg_filters} {arg_output}"
-    print(cmd)
 
     output: str = subprocess.run(
         os_cmd(cmd), text=True, capture_output=True, encoding="utf8"
     ).stdout
 
-    sil_end_find = "silence_end"
-    sil_index = output.index(sil_end_find)
-    sil_end = spaghetti(output, sil_index, sil_end_find, SILENCE_COMPENSATE)
+    # spaghetti below
+    SIL_END_FIND = "silence_end"
+    SIL_START_FIND = "silence_start"
+
+    # WARNING: .index() can raise ValueError's, so we must wrap them...
+    sil_end = 0
+    try:
+        sil_index = output.index(SIL_END_FIND)
+        sil_end = spaghetti(output, sil_index, SIL_END_FIND, SILENCE_COMPENSATE)
+    except ValueError:
+        pass
     sil_end_val = 0 if sil_end is None else max(0, sil_end)  # Clamp value
     sil_end_str = f"-ss {sil_end_val}"
 
     # more spaghetti below
     # we look for the last instance of silence_start
-    sil_start_find = "silence_start"
-    sil_index2 = output.rfind("silence_start")
-    sil_start = spaghetti(output, sil_index2, sil_start_find, -1*SILENCE_COMPENSATE)
-    sil_start_str = "" if sil_start is None else f"-to {sil_start}"
+    sil_start_str = ""
+    try:
+        # if the output ends with silence_start, then it ends in silence
+        # however, the output can end with a silence_start -> silence_end pair,
+        # meaning the file does NOT end in silence!
+        sil_index_end1 = output.rfind("silence_start")
+        sil_index_end2 = output.rfind("silence_end")
+
+        sil_end_1 = spaghetti(output, sil_index_end1, SIL_START_FIND, 0)
+        sil_end_2 = spaghetti(output, sil_index_end2, SIL_END_FIND, 0)
+
+        if sil_end_1 is not None and sil_end_2 is not None and sil_end_1 > sil_end_2:
+            sil_start = spaghetti(output, sil_index_end1, SIL_START_FIND, -1*SILENCE_COMPENSATE)
+            sil_start_str = "" if sil_start is None else f"-to {sil_start}"
+    except ValueError:
+        pass
 
     return sil_end_str + " " + sil_start_str
 
@@ -97,7 +117,6 @@ def ffmpeg_run(file):
     arg_filters = f'-af "{AF_NORM}"'
     seek = ffmpeg_crop(file)
     cmd = f"{FFMPEG} {GLOBALS} {seek} {arg_input} {arg_filters} {QUALITY} {arg_output}"
-    print(cmd)
 
     subprocess.run(os_cmd(cmd))
 
