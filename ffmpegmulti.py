@@ -33,8 +33,8 @@ class Config(TypedDict):
 
 
 def get_config() -> Config:
-    DEFAULT_CONFIG = Path("default_config.json")
-    USER_CONFIG = Path("config.json")
+    DEFAULT_CONFIG = Path(__file__).parent.joinpath("default_config.json")
+    USER_CONFIG = Path(__file__).parent.joinpath("config.json")
 
     with open(DEFAULT_CONFIG) as f:
         config = json.load(f)
@@ -179,7 +179,7 @@ def main():
 
     start = default_timer()
 
-    files = [file for file in forvo.rglob("*")]
+    files = [file for file in filter((lambda file: file.is_file()), forvo.rglob("*"))]
     files_total = len(files)
 
     with ProcessPoolExecutor(max_workers=(cpu_count() -1)) as ex:
