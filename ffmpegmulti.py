@@ -1,19 +1,21 @@
+from __future__ import annotations
+
 import shlex
 import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from timeit import default_timer
+from typing import Optional
 
-FFMPEG = "ffmpeg.exe"
+#FFMPEG = "ffmpeg.exe"
+FFMPEG = "/home/austin/i/mpv-build/mpv-build/ffmpeg_build/ffmpeg"
+#FFMPEG = "ffmpeg"
 GLOBALS = "-loglevel warning -y"
 
+# we keep the normalization as 0.5 to match closer to nhk16 audio
+# and to match the new flags from stegatxins0-mining
 AF_NORM = "speechnorm=p=0.5:e=6.25:r=0.0001:l=1"
-#AF_PASS = "lowpass=f=3000,highpass=f=200,arnndn=m=cb.rnnn"
-#AF_PASS = "lowpass=f=1000,highpass=f=200,afftdn=nf=-25"
-#AF_PASS = "lowpass=f=1000,highpass=f=200,afftdn" # CANDIDATE
-#AF_PASS = "lowpass=f=1000,highpass=f=200,arnndn=m=sh.rnnn"
-#AF_PASS = "lowpass=f=1000,highpass=f=200,afftdn=nf=-25=tn=1"
 AF_PASS = "highpass=f=300,asendcmd=0.0 afftdn sn start,asendcmd=1.5 afftdn sn stop,afftdn=nf=-20,dialoguenhance,lowpass=f=3000"
 
 
@@ -26,9 +28,10 @@ AF_SILENCE_DETECT = "silencedetect=n=-50dB:d=0.01,ametadata=print:file=-"
 # Too small and some voices get cut, too big and not much silence is cut
 SILENCE_COMPENSATE = 0.2
 
-QUALITY = "-q:a 4"
+#QUALITY = "-q:a 4"
+QUALITY = "-b:a 32k" # OPUS
 DESTINATION = "forvo_files_new/"
-CODEC = ".mp3"
+CODEC = ".opus"
 
 
 def os_cmd(cmd):
@@ -36,40 +39,65 @@ def os_cmd(cmd):
     return cmd if sys.platform == "win32" else shlex.split(cmd)
 
 
-def ffmpeg_silence_end(file):
+def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
+    """
+    spaghetti
+    """
+    offset_start = len(str_find) + 1 # str_find=
+    if output[index+offset_start:index+offset_start+2] == "0\n":
+        return None
+    offset_end = offset_start + 4
+
+    sil_end = None
+    try:
+        # Gets the value after silence_end= in stdout
+        # Example output in stdout: lavfi.silence_end=0.541813
+        sil_end = float(output[index+offset_start:index+offset_end]) - silence_compensate
+    except ValueError as err:  # wtf
+        print(f"Kuru Kuru Kuru Kuru\n{err}")
+        print(f"{output}\n\nsilence_index+12={output[index+12:]}\n")
+
+    return sil_end
+
+
+def ffmpeg_crop(file):
+    """
+    returns -ss STARTING_SILENCE_END -to ENDING_SILENCE_START
+    or -ss STARTING_SILENCE_END (if ENDING_SILENCE_START doesn't exist)
+    """
     arg_input = f"-i {file}"
     arg_output = "-f null -"
     arg_filters = f'-af "{AF_PASS},{AF_SILENCE_DETECT}"'
     cmd = f"{FFMPEG} {arg_input} {arg_filters} {arg_output}"
+    print(cmd)
 
-    output = subprocess.run(
+    output: str = subprocess.run(
         os_cmd(cmd), text=True, capture_output=True, encoding="utf8"
     ).stdout
 
-    # Spaghetti below
-    sil_end = 0
-    try:
-        sil_index = output.index("silence_end")
-    except ValueError:  # Silence not found
-        pass
-    else:
-        try:
-            # Gets the value after silence_end= in stdout
-            # Example output in stdout: lavfi.silence_end=0.541813
-            sil_end = float(output[sil_index+12:sil_index+16]) - SILENCE_COMPENSATE
-        except ValueError as err:  # wtf
-            print(f"Kuru Kuru Kuru Kuru\n{err}")
-            print(f"{output}\n\nsilence_index+12={output[sil_index+12:]}\n")
+    sil_end_find = "silence_end"
+    sil_index = output.index(sil_end_find)
+    sil_end = spaghetti(output, sil_index, sil_end_find, SILENCE_COMPENSATE)
+    sil_end_val = 0 if sil_end is None else max(0, sil_end)  # Clamp value
+    sil_end_str = f"-ss {sil_end_val}"
 
-    return max(0, sil_end)  # Clamp value
+    # more spaghetti below
+    # we look for the last instance of silence_start
+    sil_start_find = "silence_start"
+    sil_index2 = output.rfind("silence_start")
+    sil_start = spaghetti(output, sil_index2, sil_start_find, -1*SILENCE_COMPENSATE)
+    sil_start_str = "" if sil_start is None else f"-to {sil_start}"
+
+    return sil_end_str + " " + sil_start_str
 
 
 def ffmpeg_run(file):
     arg_input = f"-i {file}"
     arg_output = f"{DESTINATION}{file.parent.stem}/{file.stem}{CODEC}"
     arg_filters = f'-af "{AF_NORM}"'
-    seek = f"-ss {ffmpeg_silence_end(file)}"
+    seek = ffmpeg_crop(file)
     cmd = f"{FFMPEG} {GLOBALS} {seek} {arg_input} {arg_filters} {QUALITY} {arg_output}"
+    print(cmd)
 
     subprocess.run(os_cmd(cmd))
 
@@ -79,8 +107,9 @@ def main():
         raise SystemExit(f"Found {args_num} arguments but expected exactly 3")
     if (cpu_cores := int(sys.argv[1])) > 64 or (cpu_cores <= 0):
         raise ValueError("Sus core count")
-    if (forvo := Path(sys.argv[2])).name != "forvo_files":
-        raise SystemExit('"forvo_files" folder not found')
+    forvo = Path(sys.argv[2])
+    #if (forvo := Path(sys.argv[2])).name != "forvo_files":
+    #    raise SystemExit('"forvo_files" folder not found')
 
     print("-Running; let it cook...")
 
