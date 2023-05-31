@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import shlex
+import shutil
 import subprocess
 import sys
 import argparse
@@ -76,7 +78,11 @@ def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
     offset_start = len(str_find) + 1 # str_find=
     if output[index+offset_start:index+offset_start+2] == "0\n":
         return None
-    offset_end = offset_start + 4
+    # If there is a \n but it's not followed by a zero, change offset_end to be smaller accordingly.
+    elif "\n" in output[index+offset_start:index+offset_start+4]:
+        offset_end = offset_start + len(output[index+offset_start:index+offset_start+4].split("\n")[0])
+    else:
+        offset_end = offset_start + 4
 
     sil_end = None
     try:
@@ -172,8 +178,11 @@ def main():
     destination = Path(args.output_dir)
     if not forvo.is_dir():
         raise RuntimeError(f"input dir is not valid: {forvo}")
+    # copy directory tree from source if the dest dir doesn't exist
+    # https://www.geeksforgeeks.org/python-copy-directory-structure-without-files/
     if not destination.is_dir():
-        raise RuntimeError(f"output dir is not valid: {destination}")
+        shutil.copytree(forvo, destination, ignore=(
+            lambda dir, files: [f for f in files if os.path.isfile(os.path.join(dir, f))]))
 
     print("-Running; let it cook...")
 
