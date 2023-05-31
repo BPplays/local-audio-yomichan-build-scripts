@@ -4,6 +4,7 @@ import json
 import shlex
 import subprocess
 import sys
+import argparse
 from typing import TypedDict
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
@@ -47,6 +48,19 @@ def get_config() -> Config:
             config[k] = v
 
     return config
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("codec", choices=["opus", "mp3"], )
+    parser.add_argument("input_dir", type=str)
+    parser.add_argument("output_dir", type=str)
+    parser.add_argument("--quality", type=str, default=None)
+    parser.add_argument("--no-normalize", type=bool, default=False) # TODO: use this option!
+    parser.add_argument("--no-silence-remove", type=bool, default=False) # TODO: use this option!
+
+    return parser.parse_args()
 
 
 def os_cmd(cmd):
@@ -139,21 +153,27 @@ def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config):
 
 def main():
     config = get_config()
+    args = get_args()
 
-    if (args_num := len(sys.argv)) != 4:
-        raise SystemExit(f"Found {args_num} arguments but expected exactly 3\nUsage: {sys.argv[0]} opus|mp3 input_dir output_dir")
-    if (sys.argv[1] == "opus"):
+    if args.codec == "opus":
         codec = ".opus"
         quality = "-b:a 32k"
-    elif (sys.argv[1] == "mp3"):
+    elif args.codec == "mp3":
         codec = ".mp3"
         quality = "-q:a 3"
     else:
-        raise SystemExit(f"Invalid codec {sys.argv[1]}. Choose mp3 or opus.")
+        raise RuntimeError("this should not be reached")
 
-    forvo = Path(sys.argv[2])
-    destination = Path(sys.argv[3])
+    # overrides default quality with user specified quality, if exists
+    if args.quality is not None:
+        quality = args.quality
 
+    forvo = Path(args.input_dir)
+    destination = Path(args.output_dir)
+    if not forvo.is_dir():
+        raise RuntimeError(f"input dir is not valid: {forvo}")
+    if not destination.is_dir():
+        raise RuntimeError(f"output dir is not valid: {destination}")
 
     print("-Running; let it cook...")
 
