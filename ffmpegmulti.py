@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import shlex
 import subprocess
 import sys
+from typing import TypedDict
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from multiprocessing import cpu_count
@@ -10,28 +12,41 @@ from pathlib import Path
 from timeit import default_timer
 from typing import Optional
 
-#FFMPEG = "ffmpeg.exe"
-#FFMPEG = "/home/austin/i/mpv-build/mpv-build/ffmpeg_build/ffmpeg"
-FFMPEG = "/home/tim/src/ffmpeg-static/bin/ffmpeg"
-#FFMPEG = "ffmpeg"
-GLOBALS = "-loglevel warning -y"
 
-# we keep the normalization as 0.5 to match closer to nhk16 audio
-# and to match the new flags from stegatxins0-mining
-AF_NORM = "speechnorm=p=0.5:e=6.25:r=0.0001:l=1"
-AF_PASS = "highpass=f=300,asendcmd=0.0 afftdn sn start,asendcmd=1.5 afftdn sn stop,afftdn=nf=-20,dialoguenhance,lowpass=f=3000"
+class Config(TypedDict):
+    ffmpeg: str
+    globals: str
+
+    # we keep the normalization as 0.5 to match closer to nhk16 audio
+    # and to match the new flags from stegatxins0-mining
+    af_norm: str
+    af_pass: str
+
+    # "ametadata=print:file=-" outputs to stdout
+    # d = duration of silence before it is considered as "silence"
+    af_silence_detect: str
+
+    # Pads audio compensate for potential inaccuracies
+    # Too small and some voices get cut, too big and not much silence is cut
+    silence_compensate: float
 
 
+def get_config() -> Config:
+    DEFAULT_CONFIG = Path("default_config.json")
+    USER_CONFIG = Path("config.json")
 
-# "ametadata=print:file=-" outputs to stdout
-# d = duration of silence before it is considered as "silence"
-AF_SILENCE_DETECT = "silencedetect=n=-50dB:d=0.01,ametadata=print:file=-"
+    with open(DEFAULT_CONFIG) as f:
+        config = json.load(f)
 
-# Subtracts from silence_end to compensate for potential inaccuracies
-# Too small and some voices get cut, too big and not much silence is cut
-SILENCE_COMPENSATE = 0.2
+    # override default config with user config
+    if USER_CONFIG.is_file():
+        with open(USER_CONFIG) as f:
+            user_config = json.load(f)
 
-#quality = "-q:a 4"
+        for k,v in user_config.items():
+            config[k] = v
+
+    return config
 
 
 def os_cmd(cmd):
@@ -61,15 +76,15 @@ def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
     return sil_end
 
 
-def ffmpeg_crop(file):
+def ffmpeg_crop(file, config: Config):
     """
     returns -ss STARTING_SILENCE_END -to ENDING_SILENCE_START
     or -ss STARTING_SILENCE_END (if ENDING_SILENCE_START doesn't exist)
     """
     arg_input = f"-i {file}"
     arg_output = "-f null -"
-    arg_filters = f'-af "{AF_PASS},{AF_SILENCE_DETECT}"'
-    cmd = f"{FFMPEG} {arg_input} {arg_filters} {arg_output}"
+    arg_filters = f'-af "{config["af_pass"]},{config["af_silence_detect"]}"'
+    cmd = f'{config["ffmpeg"]} {arg_input} {arg_filters} {arg_output}'
 
     output: str = subprocess.run(
         os_cmd(cmd), text=True, capture_output=True, encoding="utf8"
@@ -83,7 +98,7 @@ def ffmpeg_crop(file):
     sil_end = 0
     try:
         sil_index = output.index(SIL_END_FIND)
-        sil_end = spaghetti(output, sil_index, SIL_END_FIND, SILENCE_COMPENSATE)
+        sil_end = spaghetti(output, sil_index, SIL_END_FIND, config["silence_compensate"])
     except ValueError:
         pass
     sil_end_val = 0 if sil_end is None else max(0, sil_end)  # Clamp value
@@ -103,7 +118,7 @@ def ffmpeg_crop(file):
         sil_end_2 = spaghetti(output, sil_index_end2, SIL_END_FIND, 0)
 
         if sil_end_1 is not None and sil_end_2 is not None and sil_end_1 > sil_end_2:
-            sil_start = spaghetti(output, sil_index_end1, SIL_START_FIND, -1*SILENCE_COMPENSATE)
+            sil_start = spaghetti(output, sil_index_end1, SIL_START_FIND, -config["silence_compensate"])
             sil_start_str = "" if sil_start is None else f"-to {sil_start}"
     except ValueError:
         pass
@@ -111,18 +126,20 @@ def ffmpeg_crop(file):
     return sil_end_str + " " + sil_start_str
 
 
-def ffmpeg_run(file, codec, destination, quality, srcpath):
+def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config):
     arg_input = f"-i \"{file}\""
     arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
-    arg_filters = f'-af "{AF_NORM}"'
+    arg_filters = f'-af "{config["af_norm"]}"'
     #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
-    seek = ffmpeg_crop(file)
-    cmd = f"{FFMPEG} {GLOBALS} {seek} {arg_input} {arg_filters} {quality} {arg_output}"
+    seek = ffmpeg_crop(file, config)
+    cmd = f'{config["ffmpeg"]} {config["globals"]} {seek} {arg_input} {arg_filters} {quality} {arg_output}'
 
     subprocess.run(os_cmd(cmd))
 
 
 def main():
+    config = get_config()
+
     if (args_num := len(sys.argv)) != 4:
         raise SystemExit(f"Found {args_num} arguments but expected exactly 3\nUsage: {sys.argv[0]} opus|mp3 input_dir output_dir")
     if (sys.argv[1] == "opus"):
@@ -132,7 +149,7 @@ def main():
         codec = ".mp3"
         quality = "-q:a 3"
     else:
-        raise SystemExit(f"Invalid codec {codec}. Choose mp3 or opus.")
+        raise SystemExit(f"Invalid codec {sys.argv[1]}. Choose mp3 or opus.")
 
     forvo = Path(sys.argv[2])
     destination = Path(sys.argv[3])
@@ -147,7 +164,7 @@ def main():
 
     with ProcessPoolExecutor(max_workers=(cpu_count() -1)) as ex:
         files_count = 0
-        for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo)):
+        for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo), repeat(config)):
             print(f"-PROGRESS: {files_count}/{files_total}", end="\r", flush=True)
             files_count += 1
 
