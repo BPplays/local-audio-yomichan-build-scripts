@@ -4,12 +4,15 @@ import shlex
 import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
+from multiprocessing import cpu_count
 from pathlib import Path
 from timeit import default_timer
 from typing import Optional
 
 #FFMPEG = "ffmpeg.exe"
-FFMPEG = "/home/austin/i/mpv-build/mpv-build/ffmpeg_build/ffmpeg"
+#FFMPEG = "/home/austin/i/mpv-build/mpv-build/ffmpeg_build/ffmpeg"
+FFMPEG = "/home/tim/src/ffmpeg-static/bin/ffmpeg"
 #FFMPEG = "ffmpeg"
 GLOBALS = "-loglevel warning -y"
 
@@ -28,10 +31,7 @@ AF_SILENCE_DETECT = "silencedetect=n=-50dB:d=0.01,ametadata=print:file=-"
 # Too small and some voices get cut, too big and not much silence is cut
 SILENCE_COMPENSATE = 0.2
 
-#QUALITY = "-q:a 4"
-QUALITY = "-b:a 32k" # OPUS
-DESTINATION = "forvo_files_new/"
-CODEC = ".opus"
+#quality = "-q:a 4"
 
 
 def os_cmd(cmd):
@@ -111,35 +111,43 @@ def ffmpeg_crop(file):
     return sil_end_str + " " + sil_start_str
 
 
-def ffmpeg_run(file):
-    arg_input = f"-i {file}"
-    arg_output = f"{DESTINATION}{file.parent.stem}/{file.stem}{CODEC}"
+def ffmpeg_run(file, codec, destination, quality, srcpath):
+    arg_input = f"-i \"{file}\""
+    arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
     arg_filters = f'-af "{AF_NORM}"'
+    #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
     seek = ffmpeg_crop(file)
-    cmd = f"{FFMPEG} {GLOBALS} {seek} {arg_input} {arg_filters} {QUALITY} {arg_output}"
+    cmd = f"{FFMPEG} {GLOBALS} {seek} {arg_input} {arg_filters} {quality} {arg_output}"
 
     subprocess.run(os_cmd(cmd))
 
 
 def main():
-    if (args_num := len(sys.argv)) != 3:
-        raise SystemExit(f"Found {args_num} arguments but expected exactly 3")
-    if (cpu_cores := int(sys.argv[1])) > 64 or (cpu_cores <= 0):
-        raise ValueError("Sus core count")
+    if (args_num := len(sys.argv)) != 4:
+        raise SystemExit(f"Found {args_num} arguments but expected exactly 3\nUsage: {sys.argv[0]} opus|mp3 input_dir output_dir")
+    if (sys.argv[1] == "opus"):
+        codec = ".opus"
+        quality = "-b:a 32k"
+    elif (sys.argv[1] == "mp3"):
+        codec = ".mp3"
+        quality = "-q:a 3"
+    else:
+        raise SystemExit(f"Invalid codec {codec}. Choose mp3 or opus.")
+
     forvo = Path(sys.argv[2])
-    #if (forvo := Path(sys.argv[2])).name != "forvo_files":
-    #    raise SystemExit('"forvo_files" folder not found')
+    destination = Path(sys.argv[3])
+
 
     print("-Running; let it cook...")
 
     start = default_timer()
 
-    files = [file for file in forvo.rglob("*/*")]
+    files = [file for file in forvo.rglob("*")]
     files_total = len(files)
 
-    with ProcessPoolExecutor(max_workers=cpu_cores) as ex:
+    with ProcessPoolExecutor(max_workers=(cpu_count() -1)) as ex:
         files_count = 0
-        for _ in ex.map(ffmpeg_run, files):
+        for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo)):
             print(f"-PROGRESS: {files_count}/{files_total}", end="\r", flush=True)
             files_count += 1
 
