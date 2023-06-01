@@ -20,8 +20,9 @@ class Config(TypedDict):
     ffmpeg: str
     globals: str
 
-    # we keep the normalization as 0.5 to match closer to nhk16 audio
-    # and to match the new flags from stegatxins0-mining
+    # We keep speechnorm=p=0.35 to match similarly to anime dialogue volume
+    # Estimated anime mean_volume: -26.6
+    # Estimated anime max_volume = -8.8
     af_norm: str
     af_pass: str
 
