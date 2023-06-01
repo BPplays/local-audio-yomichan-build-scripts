@@ -124,7 +124,8 @@ def add_terms_to_ajt_index(terms: list[TermInfo], ajt_index: SourceIndex, md5: s
         term = term_info["term"]
         if term not in ajt_index["headwords"]:
             ajt_index["headwords"][term] = []
-        ajt_index["headwords"][term].append(new_file_name)
+        if new_file_name not in ajt_index["headwords"][term]:
+            ajt_index["headwords"][term].append(new_file_name)
 
     file_info: Any = {} # Any because I'm too lazy to get typing to work here
     if reading is not None:
