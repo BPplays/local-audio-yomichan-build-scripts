@@ -18,12 +18,13 @@ import shutil
 import hashlib
 import argparse
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TypedDict, NewType, NotRequired, Any
 
 # TypedDict classes and FileList copied/pasted from AJT Japanese
 
-TEMP_INDEX = "output/jpod/temp_index.json"
-OUT_INDEX = "output/jpod/index.json"
+TEMP_INDEX = "temp/jpod/temp_index.json"
+OUT_INDEX = "temp/jpod/index.json"
 
 FileList = list[str]
 
@@ -70,56 +71,63 @@ def get_args():
     parser.add_argument("--no-index-gen", action="store_true")
     return parser.parse_args()
 
+def is_supported_audio_file_ext(path):
+    """
+    copy-paste from local-audio-yomichan
+    """
+    if not isinstance(path, Path):
+        path = Path(path)
+    if not path.is_file():
+        return False
+    # audio container formats supposedly supported by browsers (excluding webm since it's typically for videos)
+    if not path.suffix.lower() in ['.mp3', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.flac', '.wav']:
+        print(f"({self.__class__.__name__}) skipping non-audio file: {path}")
+        return False
+    return True
+
 
 def parse_directory(input_dir: str, index: JpodIndex):
-
     # copy/paste from local audio add-on
-    for root, _, files in os.walk(input_dir, topdown=False):
-        for name in files:
-            path = os.path.join(root, name)
+    for path in filter(is_supported_audio_file_ext, Path(input_dir).rglob("*")):
+        relative_path = str(path.relative_to(input_dir))
+        basename_noext = path.stem
+        parts = basename_noext.split(" - ")
 
-            relative_path = os.path.relpath(path, input_dir)
+        # Cannot parse required fields from a filename missing a " - " separator.
+        if len(parts) != 2:
+            print(
+                f"({self.__class__.__name__}) skipping file without ' - ' sep: {relative_path}"
+            )
+            continue
+        reading, term = parts
 
-            if not name.endswith(".mp3"):
-                print(
-                    f"(jpod_index) skipping non-mp3 file: {relative_path}"
-                )
-                continue
+        # usually, jpod file names are formatted as:
+        # "reading - term.mp3"
+        # however, sometimes, the reading section is just the term (even if the term is kanji)
+        if reading == term and not is_kana(reading):
+            reading = None
 
-            parts = name.removesuffix(".mp3").split(" - ")
-            if len(parts) != 2:
-                print(
-                    f"(jpod_index) skipping file with ' - ' sep: {relative_path}"
-                )
-                continue
-            reading, term = parts
+        # checksums: https://stackoverflow.com/a/16876405
+        with open(path, 'rb') as f:
+            data = f.read()
+            md5 = hashlib.md5(data).hexdigest()
 
-            # usually, jpod file names are formatted as:
-            # "reading - term.mp3"
-            # however, sometimes, the reading section is just the term (even if the term is kanji)
-            if reading == term and not is_kana(reading):
-                reading = None
+            # ASSUMPTION: a unique md5 == unique file contents
+            # (should be safe to assume since we're not dealing with petabytes of data,
+            # and we're not dealing with potentially adverse data)
+            if md5 not in index:
+                index[md5] = []
 
-            # checksums: https://stackoverflow.com/a/16876405
-            with open(path, 'rb') as f:
-                data = f.read()
-                md5 = hashlib.md5(data).hexdigest()
-
-                # ASSUMPTION: a unique md5 == unique file contents
-                # (should be safe to assume since we're not dealing with petabytes of data,
-                # and we're not dealing with potentially adverse data)
-                if md5 not in index:
-                    index[md5] = []
-
-                index[md5].append({"term": term, "reading": reading, "file": path})
+            index[md5].append({"term": term, "reading": reading, "file": str(path)})
 
 def add_terms_to_ajt_index(terms: list[TermInfo], ajt_index: SourceIndex, md5: str, reading_override: str | None = None):
     assert len(terms) > 0
-    MEDIA_DIR = "output/jpod/media"
+    MEDIA_DIR = "temp/jpod/media"
 
     reading = reading_override
     og_file_name = terms[0]["file"]
     new_file_name = md5 + ".mp3" # NOTE: hard coded mp3 because original files should all be mp3
+    # It's okay for wav files to have a .mp3 extension for this temporary purpose. ffmpeg will detect by file content.
     shutil.copy(og_file_name, os.path.join(MEDIA_DIR, new_file_name))
 
     for term_info in terms:
@@ -208,7 +216,7 @@ def create_jpod_index():
 
 def main():
     # Create required directories if they don't exist
-    os.makedirs("output/jpod/media", exist_ok=True)
+    os.makedirs("temp/jpod/media", exist_ok=True)
 
     args = get_args()
 
