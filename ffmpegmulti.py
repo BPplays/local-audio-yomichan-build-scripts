@@ -59,8 +59,8 @@ def get_args():
     parser.add_argument("input_dir", type=str)
     parser.add_argument("output_dir", type=str)
     parser.add_argument("--quality", type=str, default=None)
-    parser.add_argument("--no-normalize", type=bool, default=False) # TODO: use this option!
-    parser.add_argument("--no-silence-remove", type=bool, default=False) # TODO: use this option!
+    parser.add_argument("--no-normalize", default=False, action='store_true')
+    parser.add_argument("--no-silence-remove", default=False, action='store_true')
 
     return parser.parse_args()
 
@@ -146,12 +146,12 @@ def ffmpeg_crop(file, config: Config):
     return sil_end_str + " " + sil_start_str
 
 
-def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config):
+def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config, no_normalize, no_silence_remove):
     arg_input = f"-i \"{file}\""
     arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
-    arg_filters = f'-af "{config["af_norm"]}"'
+    arg_filters = "" if no_normalize else f'-af "{config["af_norm"]}"'
     #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
-    seek = ffmpeg_crop(file, config)
+    seek = "" if no_silence_remove else ffmpeg_crop(file, config)
     cmd = f'{config["ffmpeg"]} {config["globals"]} {seek} {arg_input} {arg_filters} {quality} {arg_output}'
 
     subprocess.run(os_cmd(cmd))
@@ -181,6 +181,7 @@ def main():
     # copy directory tree from source if the dest dir doesn't exist
     # https://www.geeksforgeeks.org/python-copy-directory-structure-without-files/
     if not destination.is_dir():
+        print ("Making destination directories...")
         shutil.copytree(forvo, destination, ignore=(
             lambda dir, files: [f for f in files if os.path.isfile(os.path.join(dir, f))]))
 
@@ -193,7 +194,7 @@ def main():
 
     with ProcessPoolExecutor(max_workers=(cpu_count() -1)) as ex:
         files_count = 0
-        for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo), repeat(config)):
+        for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo), repeat(config), repeat(args.no_normalize), repeat(args.no_silence_remove)):
             print(f"-PROGRESS: {files_count}/{files_total}", end="\r", flush=True)
             files_count += 1
 
