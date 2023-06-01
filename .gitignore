@@ -1,4 +1,5 @@
 Session.vim
+.python-version
 
 forvo_files/
 jpod_files/
@@ -8,5 +9,6 @@ shinmeikai8_files/
 
 input/
 output/
+build/
 
 config.json

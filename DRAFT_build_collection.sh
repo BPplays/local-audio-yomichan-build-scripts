@@ -29,7 +29,10 @@ sed 's/.aac/.mp3/g' nhk16_files/entries.json > mp3_out/user_files/nhk16_files/en
 python "$SCRIPT_PATH/compare.py" delete
 
 
-### TODO stuff for jpod
+mkdir -p output/jpod/media
+python jpod_index.py
+# TODO: convert jpod to opus
+
 
 ### TODO remove known broken files
 
