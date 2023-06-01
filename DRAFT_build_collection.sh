@@ -9,11 +9,12 @@
 #   jpod_files
 #   nhk16_files
 #   shinmeikai8_files
+#
+#   Make sure you set your ffmpeg path in the ffmpegmulti config, if needed
 
 # https://gist.github.com/vncsna/64825d5609c146e80de8b1fd623011ca
 set -euxo pipefail
 SCRIPT_PATH=$(dirname -- "${BASH_SOURCE[0]}")
-FFMPEG_PATH="ffmpeg"
 
 mkdir -p output/{opus,mp3}/user_files
 # run ffmpegmulti script to normalize audio, trim silence from beginning and end, and convert to both opus and mp3.
@@ -30,10 +31,8 @@ python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/shinmeikai8_files output/mp3/user
 sed 's/.aac/.opus/g' input/shinmeikai8_files/index.json > output/opus/user_files/shinmeikai8_files/index.json
 sed 's/.aac/.mp3/g' input/shinmeikai8_files/index.json > output/mp3/user_files/shinmeikai8_files/index.json
 
-# convert nhk16 files without any extra processing
-# TODO: decide if they should be processed
-python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove --no-normalize opus input/nhk16_files output/opus/user_files/nhk16_files
-python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove --no-normalize mp3 input/nhk16_files output/mp3/user_files/nhk16_files
+python "$SCRIPT_PATH/ffmpegmulti.py" opus input/nhk16_files output/opus/user_files/nhk16_files
+python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/nhk16_files output/mp3/user_files/nhk16_files
 
 sed 's/.aac/.opus/g' input/nhk16_files/entries.json > output/opus/user_files/nhk16_files/entries.json
 sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16_files/entries.json
@@ -42,14 +41,11 @@ sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16
 python "$SCRIPT_PATH/jpod_index.py"
 
 # Convert jpod files
-python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove --no-normalize opus temp/jpod output/opus/user_files/jpod_files
-python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove --no-normalize mp3 temp/jpod output/mp3/user_files/jpod_files
+python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove opus temp/jpod output/opus/user_files/jpod_files
+python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove mp3 temp/jpod output/mp3/user_files/jpod_files
 
 sed 's/.mp3/.opus/g' temp/jpod/index.json > output/opus/user_files/jpod_files/index.json
 cp temp/jpod/index.json output/mp3/user_files/jpod_files/index.json
-
-### TODO remove known broken files
-
 
 # TODO create a zip of the outputted folder
 # NOTE: do NOT include `output/jpod/temp_index.json` in the zip

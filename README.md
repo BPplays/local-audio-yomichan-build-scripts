@@ -35,7 +35,7 @@ Goals of this repo:
 - (done) remove exact duplicates within the `jpod` and `jpod_alternate` sources, unify it as one, and build an index (done via `jpod_index.py`)
 - (done?) make all scripts use the unified file directory structure
 - (done) run `ffmpegmulti --no-silence-remove` on `jpod` and `jpod_alternate`
-- convert `nhk16_files` to opus and to mp3. Decide if they need normalization and/or silence removal
+- (done) convert `nhk16_files` to opus and to mp3. Decide if they need normalization and/or silence removal (norm + silence it is)
 - (done) remove broken files:
     - (done) skent/解く - just rm from the build script
     - (done) broken jpod files (https://discord.com/channels/617136488840429598/1074057444365443205/1113679859609260062)
