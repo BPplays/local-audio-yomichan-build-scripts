@@ -19,9 +19,8 @@ sed 's/.aac/.opus/g' shinmeikai8_files/index.json > opus_out/user_files/shinmeik
 sed 's/.aac/.mp3/g' shinmeikai8_files/index.json > mp3_out/user_files/shinmeikai8_files/index.json
 
 # convert nhk16 files without any extra processing
-mkdir -p {opus,mp3}_out/nhk16_files/audio
-find nhk16_files/ -type f -name "*.aac" -print0 | parallel -0 --progress "$FFMPEG_PATH" -loglevel warning -i "{}" -b:a 32k "nhk16_files_opus/audio/{/.}.opus"
-find nhk16_files/ -type f -name "*.aac" -print0 | parallel -0 --progress "$FFMPEG_PATH" -loglevel warning -i "{}" -q:a 3 "nhk16_files_mp3/audio/{/.}.mp3"
+python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove --no-normalize opus nhk16_files opus_out/user_files/nhk16_files
+python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove --no-normalize mp3 nhk16_files mp3_out/user_files/nhk16_files
 
 sed 's/.aac/.opus/g' nhk16_files/entries.json > opus_out/user_files/nhk16_files/entries.json
 sed 's/.aac/.mp3/g' nhk16_files/entries.json > mp3_out/user_files/nhk16_files/entries.json
