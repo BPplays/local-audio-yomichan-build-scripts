@@ -44,6 +44,9 @@ Goals of this repo:
     - see `yomichan_import` / JMdict forms dictionary for reference on parsing the original xml
 - main build script (started: `DRAFT_build_collection.sh`)
 - rename repo
+- investigate how much `opus` actually reduces file size for all sources! SMK8 might not have much of an effect
+    > for shinmeikai, i initially converted all the files to opus, but decided to keep them in the original format after measuring file sizes and noticing no improvement in size.
+    - It should suffice to just compare the mp3 and opus outputs when it's all done
 
 ## Credits
 - TODO
