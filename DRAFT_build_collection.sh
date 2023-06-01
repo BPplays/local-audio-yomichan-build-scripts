@@ -30,10 +30,12 @@ python "$SCRIPT_PATH/compare.py" delete
 
 
 mkdir -p output/jpod/media
-python jpod_index.py
+python "$SCRIPT_PATH/jpod_index.py"
 # TODO: convert jpod to opus
 
 
 ### TODO remove known broken files
 
 
+# TODO create a zip of the outputted folder
+# NOTE: do NOT include `output/jpod/temp_index.json` in the zip
