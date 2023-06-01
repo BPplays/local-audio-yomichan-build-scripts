@@ -180,12 +180,15 @@ def main():
     destination = Path(args.output_dir)
     if not forvo.is_dir():
         raise RuntimeError(f"input dir is not valid: {forvo}")
+
     # copy directory tree from source if the dest dir doesn't exist
-    # https://www.geeksforgeeks.org/python-copy-directory-structure-without-files/
     if not destination.is_dir():
         print ("Making destination directories...")
-        shutil.copytree(forvo, destination, ignore=(
-            lambda dir, files: [f for f in files if os.path.isfile(os.path.join(dir, f))]))
+        for dirpath, dirnames, _ in os.walk(forvo):
+            for dirname in dirnames:
+                src_dir = os.path.join(dirpath, dirname)
+                dest_dir = os.path.join(destination, os.path.relpath(src_dir, forvo))
+                os.makedirs(dest_dir, exist_ok=True)
 
     print("-Running; let it cook...")
 

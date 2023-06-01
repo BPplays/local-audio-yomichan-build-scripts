@@ -207,10 +207,8 @@ def create_jpod_index():
         json.dump(index, f, ensure_ascii=False, indent=2)
 
 def main():
-    # TODO: create required directories:
-    # output
-    # output/jpod
-    # output/jpod/media
+    # Create required directories if they don't exist
+    os.makedirs("output/jpod/media", exist_ok=True)
 
     args = get_args()
 
