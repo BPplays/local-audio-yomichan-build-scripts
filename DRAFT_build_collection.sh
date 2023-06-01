@@ -16,6 +16,20 @@
 set -euxo pipefail
 SCRIPT_PATH=$(dirname -- "${BASH_SOURCE[0]}")
 
+
+# stolen from yomichan_import
+# downloads JMdict raw file
+function refresh_source () {
+    NOW=$(date '+%s')
+    YESTERDAY=$((NOW - 86400)) # 86,400 seconds in 24 hours
+    if [ ! -f "src/$1" ]; then
+        wget "ftp.edrdg.org/pub/Nihongo/$1.gz"
+        gunzip -c "$1.gz" > "src/$1"
+    elif [[ $YESTERDAY -gt $(date -r "src/$1" '+%s') ]]; then
+        rsync "ftp.edrdg.org::nihongo/$1" "src/$1"
+    fi
+}
+
 mkdir -p output/{opus,mp3}/user_files
 # run ffmpegmulti script to normalize audio, trim silence from beginning and end, and convert to both opus and mp3.
 python "$SCRIPT_PATH/ffmpegmulti.py" opus input/forvo_files output/opus/user_files/forvo_files
@@ -38,6 +52,7 @@ sed 's/.aac/.opus/g' input/nhk16_files/entries.json > output/opus/user_files/nhk
 sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16_files/entries.json
 
 # Build an index of the jpod files and remove duplicates
+mkdir -p temp/jpod/media
 python "$SCRIPT_PATH/jpod_index.py"
 
 # Convert jpod files
@@ -46,6 +61,11 @@ python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove mp3 temp/jpod output/mp
 
 sed 's/.mp3/.opus/g' temp/jpod/index.json > output/opus/user_files/jpod_files/index.json
 cp temp/jpod/index.json output/mp3/user_files/jpod_files/index.json
+
+# Download JMdict for jmdict word alternatives parsing
+refresh_source "JMdict"
+
+
 
 # TODO create a zip of the outputted folder
 # NOTE: do NOT include `output/jpod/temp_index.json` in the zip

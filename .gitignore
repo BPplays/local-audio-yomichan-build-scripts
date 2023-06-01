@@ -10,5 +10,6 @@ shinmeikai8_files/
 input/
 output/
 build/
+temp/
 
 config.json

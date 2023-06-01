@@ -25,6 +25,8 @@ from typing import TypedDict, NewType, NotRequired, Any
 
 TEMP_INDEX = "temp/jpod/temp_index.json"
 OUT_INDEX = "temp/jpod/index.json"
+OUT_MEDIA = "temp/jpod/media"
+
 
 FileList = list[str]
 
@@ -81,7 +83,7 @@ def is_supported_audio_file(path):
         return False
     # audio container formats supposedly supported by browsers (excluding webm since it's typically for videos)
     if not path.suffix.lower() in ['.mp3', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.flac', '.wav']:
-        print(f"({self.__class__.__name__}) skipping non-audio file: {path}")
+        print(f"(jpod_index) skipping non-audio file: {path}")
         return False
 
     return True
@@ -104,7 +106,7 @@ def parse_directory(input_dir: str, index: JpodIndex):
         # Cannot parse required fields from a filename missing a " - " separator.
         if len(parts) != 2:
             print(
-                f"({self.__class__.__name__}) skipping file without ' - ' sep: {relative_path}"
+                f"(jpod_index) skipping file without ' - ' sep: {relative_path}"
             )
             continue
         reading, term = parts
@@ -130,13 +132,12 @@ def parse_directory(input_dir: str, index: JpodIndex):
 
 def add_terms_to_ajt_index(terms: list[TermInfo], ajt_index: SourceIndex, md5: str, reading_override: str | None = None):
     assert len(terms) > 0
-    MEDIA_DIR = "temp/jpod/media"
 
     reading = reading_override
     og_file_name = terms[0]["file"]
     new_file_name = md5 + ".mp3" # NOTE: hard coded mp3 because original files should all be mp3
     # It's okay for wav files to have a .mp3 extension for this temporary purpose. ffmpeg will detect by file content.
-    shutil.copy(og_file_name, os.path.join(MEDIA_DIR, new_file_name))
+    shutil.copy(og_file_name, os.path.join(OUT_MEDIA, new_file_name))
 
     for term_info in terms:
         # gets the first reading from the terms
@@ -161,8 +162,7 @@ def add_terms_to_ajt_index(terms: list[TermInfo], ajt_index: SourceIndex, md5: s
 
 
 def parse_index(index: JpodIndex):
-    # counts the number of files that have duplicate readings
-    # (does NOT count number of words that are skipped!)
+    # counts the number of words that are removed
     counter = 0
 
     jpod_audio_unique = 0
@@ -195,15 +195,17 @@ def parse_index(index: JpodIndex):
 
         if len(readings) > 2:
             #print(index[md5])
-            counter += 1
             if jpod_counter > 1:
                 jpod_audio_unique += 1
                 # we do NOT add the audio here, because there are multiple readings,
                 # and there is no jpod source to refer to as the 'golden standard' reading
+                counter += len(readings)
             elif jpod_counter == 1:
                 # ASSUMPTION: jpod source has the correct reading
                 assert ajt_reading is not None
                 add_terms_to_ajt_index(terms, ajt_index, md5, ajt_reading)
+            else:
+                counter += len(readings)
 
         else:
             # unique reading for the word, safe to use!
@@ -224,7 +226,7 @@ def create_jpod_index():
 
 def main():
     # Create required directories if they don't exist
-    os.makedirs("temp/jpod/media", exist_ok=True)
+    os.makedirs(OUT_MEDIA, exist_ok=True)
 
     args = get_args()
 
