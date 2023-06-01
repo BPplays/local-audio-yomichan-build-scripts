@@ -71,7 +71,7 @@ def get_args():
     parser.add_argument("--no-index-gen", action="store_true")
     return parser.parse_args()
 
-def is_supported_audio_file_ext(path):
+def is_supported_audio_file(path):
     """
     copy-paste from local-audio-yomichan
     """
@@ -83,13 +83,21 @@ def is_supported_audio_file_ext(path):
     if not path.suffix.lower() in ['.mp3', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.flac', '.wav']:
         print(f"({self.__class__.__name__}) skipping non-audio file: {path}")
         return False
+
     return True
 
 
 def parse_directory(input_dir: str, index: JpodIndex):
     # copy/paste from local audio add-on
-    for path in filter(is_supported_audio_file_ext, Path(input_dir).rglob("*")):
-        relative_path = str(path.relative_to(input_dir))
+    for path in filter(is_supported_audio_file, Path(input_dir).rglob("*")):
+        relative_path = str(path.relative_to(Path(input_dir).parent))
+        # Remove known broken files
+        if relative_path in ("jpod_files/かえる - 蛙.mp3", "jpod_files/きゅうりょうび - 給料日.mp3",
+                             "jpod_files/ひとり - 一人.mp3", "jpod_files/くばる - 配る.mp3",
+                             "jpod_files/せいえん - 声援.mp3", "jpod_files/こうこく - 広告.mp3"):
+            print(f"Excluding known broken file {relative_path}")
+            continue
+
         basename_noext = path.stem
         parts = basename_noext.split(" - ")
 

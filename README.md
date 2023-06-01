@@ -32,13 +32,14 @@ Goals of this repo:
 
 ## TODO
 - (done) run ffmpegmulti on all forvo audio and shinmeikai8 audio
-- (done) remove exact duplicates within the `jpod` and `jpod_alternate` sources (done via `jpod_index.py`)
-- make all scripts use the unified file directory structure
-- run `ffmpegmulti --no-silence-remove` on `jpod` and `jpod_alternate`
-- convert `nhk16_files` to opus and to mp3
-- remove broken files:
-    - skent/解く
-    - broken jpod files (https://discord.com/channels/617136488840429598/1074057444365443205/1113679859609260062)
+- (done) remove exact duplicates within the `jpod` and `jpod_alternate` sources, unify it as one, and build an index (done via `jpod_index.py`)
+- (done?) make all scripts use the unified file directory structure
+- (done) run `ffmpegmulti --no-silence-remove` on `jpod` and `jpod_alternate`
+- convert `nhk16_files` to opus and to mp3. Decide if they need normalization and/or silence removal
+- (done) remove broken files:
+    - (done) skent/解く - just rm from the build script
+    - (done) broken jpod files (https://discord.com/channels/617136488840429598/1074057444365443205/1113679859609260062)
+        - (done) Filter these out in the `jpod_index` script
 - (maybe?) use jmdict word alternatives to map audio to more words (i.e. all of 手すり・手摺り・手摺 should have the same audio)
     - the alternatives data should be available to the add-on, not to this repo (as it would be part of creating the main database?)
     - see `yomichan_import` / JMdict forms dictionary for reference on parsing the original xml
