@@ -52,7 +52,6 @@ sed 's/.aac/.opus/g' input/nhk16_files/entries.json > output/opus/user_files/nhk
 sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16_files/entries.json
 
 # Build an index of the jpod files and remove duplicates
-mkdir -p temp/jpod/media
 python "$SCRIPT_PATH/jpod_index.py"
 
 # Convert jpod files
