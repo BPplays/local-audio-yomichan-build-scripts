@@ -10,7 +10,7 @@ Goals of this repo:
 - Convert all audio to opus / mp3 (opus for more efficient storage of files, mp3 for better compatibility with AnkiMobile)
 - Remove broken and duplicate files
 
-## Expected File Structure (WIP)
+## Expected File Structure
 ```
 (repo-root)
  L input
@@ -32,9 +32,8 @@ Goals of this repo:
 
 ## TODO
 - (done) run ffmpegmulti on all forvo audio and shinmeikai8 audio
-- (done) remove exact duplicates between `jpod` and `jpod_alternate` via `compare.py delete`
-- decide on unified file directory structure
-- do something to organize the rest of the files and different word duplicates (build a AJT style index?)
+- (done) remove exact duplicates within the `jpod` and `jpod_alternate` sources (done via `jpod_index.py`)
+- make all scripts use the unified file directory structure
 - run `ffmpegmulti --no-silence-remove` on `jpod` and `jpod_alternate`
 - convert `nhk16_files` to opus and to mp3
 - remove broken files:
