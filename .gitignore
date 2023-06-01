@@ -1,4 +1,12 @@
+Session.vim
 
 forvo_files/
-forvo_files_new/
+jpod_files/
+jpod_alt_files/
+nhk16_files/
+shinmeikai8_files/
+
+input/
+output/
+
 config.json

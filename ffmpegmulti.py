@@ -23,6 +23,7 @@ class Config(TypedDict):
     # We keep speechnorm=p=0.35 to match similarly to anime dialogue volume
     # Estimated anime mean_volume: -26.6
     # Estimated anime max_volume = -8.8
+    # See: https://discord.com/channels/617136488840429598/1074057444365443205/1113704506950172713
     af_norm: str
     af_pass: str
 
