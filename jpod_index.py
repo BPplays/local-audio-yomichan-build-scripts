@@ -3,6 +3,13 @@ from __future__ import annotations
 """
 Converts our jpod audio (from jpod_files and jpod_alternate_files) into a
 unified `jpod` source, compatible with AJT Japanese.
+
+Additionally, this script does the following:
+- Remove duplicate files (using the md5 checksum)
+- Remove all files that have more than one reading associated with it
+    - UNLESS there exists one and only one reading in `jpod_files`, which we use as the gold standard
+
+Requires Python 3.11 to use NotRequired
 """
 
 import os
