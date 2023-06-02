@@ -8,7 +8,8 @@ from typing import TypedDict, NotRequired
 import xml.etree.ElementTree as ET
 
 JMDICT_PATH = 'temp/JMdict_e'
-OUTPUT_JSON = "output/jmdict_forms.json"
+OUTPUT_JSON_OPUS_COLLECTION = "output/opus/user_files/jmdict_forms.json"
+OUTPUT_JSON_MP3_COLLECTION = "output/mp3/user_files/jmdict_forms.json"
 
 UK_TEXT = "word usually written using kana alone"
 UK_CUTOFF = 0.6 # % of words that must be usually kana to be considered usually kana
@@ -108,7 +109,9 @@ def main():
     result = []
     for ele in root:
         result.extend(get_readings_to_kanji(ele))
-    with open(OUTPUT_JSON, "w") as f:
+    with open(OUTPUT_JSON_OPUS_COLLECTION, "w") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    with open(OUTPUT_JSON_MP3_COLLECTION, "w") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
 
