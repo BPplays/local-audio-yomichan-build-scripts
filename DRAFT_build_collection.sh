@@ -22,11 +22,11 @@ SCRIPT_PATH=$(dirname -- "${BASH_SOURCE[0]}")
 function refresh_source () {
     NOW=$(date '+%s')
     YESTERDAY=$((NOW - 86400)) # 86,400 seconds in 24 hours
-    if [ ! -f "src/$1" ]; then
+    if [ ! -f "temp/$1" ]; then
         wget "ftp.edrdg.org/pub/Nihongo/$1.gz"
-        gunzip -c "$1.gz" > "src/$1"
-    elif [[ $YESTERDAY -gt $(date -r "src/$1" '+%s') ]]; then
-        rsync "ftp.edrdg.org::nihongo/$1" "src/$1"
+        gunzip -c "$1.gz" > "temp/$1"
+    elif [[ $YESTERDAY -gt $(date -r "temp/$1" '+%s') ]]; then
+        rsync "ftp.edrdg.org::nihongo/$1" "temp/$1"
     fi
 }
 
@@ -61,8 +61,9 @@ python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove mp3 temp/jpod output/mp
 sed 's/.mp3/.opus/g' temp/jpod/index.json > output/opus/user_files/jpod_files/index.json
 cp temp/jpod/index.json output/mp3/user_files/jpod_files/index.json
 
-# Download JMdict for jmdict word alternatives parsing
-refresh_source "JMdict"
+# Generates jmdict_forms.json
+refresh_source "JMdict_e"
+python parse_jmdict.py
 
 
 

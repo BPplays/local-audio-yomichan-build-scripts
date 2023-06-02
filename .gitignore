@@ -1,5 +1,7 @@
 Session.vim
 .python-version
+__pycache__/
+JMdict_e.gz
 
 forvo_files/
 jpod_files/
