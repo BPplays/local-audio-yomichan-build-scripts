@@ -10,6 +10,9 @@ import xml.etree.ElementTree as ET
 JMDICT_PATH = 'temp/JMdict_e'
 OUTPUT_JSON = "output/jmdict_forms.json"
 
+UK_TEXT = "word usually written using kana alone"
+UK_CUTOFF = 0.6 # % of words that must be usually kana to be considered usually kana
+
 
 KATAKANA_CHART = "ァアィイゥウェエォオカガカ゚キギキ゚クグク゚ケゲケ゚コゴコ゚サザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワヰヱヲンヴヵヶヽヾ"
 HIRAGANA_CHART = "ぁあぃいぅうぇえぉおかがか゚きぎき゚くぐく゚けげけ゚こごこ゚さざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんゔゕゖゝゞ"
@@ -34,7 +37,7 @@ def get_readings_to_kanji(ele, filter_non_plural=True):
     # reb: reading
     # r_ele: contains reb and potentially r_kanji
 
-    readings_to_kanji = defaultdict(list)
+    readings_to_kanji: dict[str, list[KanjiInfo]] = defaultdict(list)
 
     for r_ele in ele.findall("r_ele"):
         # ASSUMPTION: this reb is a kana reading unique to this element
@@ -65,7 +68,21 @@ def get_readings_to_kanji(ele, filter_non_plural=True):
                 }
                 readings_to_kanji[reb.text].append(kanji_info)
 
-        # TODO: should we do anything if the word is uk / "usually kana"?
+    # adds the word reading if > 60% of the definitions are marked as "usually kana"
+    sense_counter = 0
+    uk_counter = 0
+    for sense in ele.findall("sense"):
+        misc = sense.find("misc")
+        if misc is not None and UK_TEXT in misc.text:
+            uk_counter += 1
+        sense_counter += 1
+    if sense_counter != 0 and uk_counter / sense_counter > UK_CUTOFF:
+        # usually kana! we add all readings
+        for reading in readings_to_kanji:
+            kanji_info: KanjiInfo = {
+                "kanji": reading,
+            }
+            readings_to_kanji[reading].append(kanji_info)
 
     if filter_non_plural:
         filtered = {}
