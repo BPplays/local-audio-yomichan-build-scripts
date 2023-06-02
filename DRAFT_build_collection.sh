@@ -57,6 +57,8 @@ python "$SCRIPT_PATH/jpod_index.py"
 # Convert jpod files
 python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove opus temp/jpod output/opus/user_files/jpod_files
 python "$SCRIPT_PATH/ffmpegmulti.py" --no-silence-remove mp3 temp/jpod output/mp3/user_files/jpod_files
+echo "{\n  \"type\": \"ajt_jp\"\n}" > output/opus/user_files/jpod_files/source_meta.json
+echo "{\n  \"type\": \"ajt_jp\"\n}" > output/mp3/user_files/jpod_files/source_meta.json
 
 sed 's/.mp3/.opus/g' temp/jpod/index.json > output/opus/user_files/jpod_files/index.json
 cp temp/jpod/index.json output/mp3/user_files/jpod_files/index.json
