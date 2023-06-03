@@ -193,7 +193,7 @@ def parse_index(index: JpodIndex):
                 jpod_counter += 1
                 ajt_reading = term_info["reading"]
 
-        if len(readings) > 2:
+        if len(readings) >= 2:
             #print(index[md5])
             if jpod_counter > 1:
                 jpod_audio_unique += 1
