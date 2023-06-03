@@ -67,5 +67,8 @@ python "$SCRIPT_PATH/parse_jmdict.py"
 
 # create final archives
 DATE="$(date -u +%Y-%m-%d)"
-7z a local-yomichan-audio-"$DATE"-opus.7z -w output/opus output/opus/user_files
-7z a local-yomichan-audio-"$DATE"-mp3.7z -w output/mp3 output/mp3/user_files
+cd output/opus
+7z a ../../local-yomichan-audio-"$DATE"-opus.7z user_files
+cd ../mp3
+7z a ../../local-yomichan-audio-"$DATE"-mp3.7z user_files
+cd ../..
