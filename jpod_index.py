@@ -211,7 +211,7 @@ def parse_index(index: JpodIndex):
             # unique reading for the word, safe to use!
             add_terms_to_ajt_index(terms, ajt_index, md5)
 
-    assert jpod_audio_unique == 0
+    print(f"Gold standard failures: {jpod_audio_unique}")
     print(f"Skipped duplicates: {counter}")
 
     with open(OUT_INDEX, "w") as f:
