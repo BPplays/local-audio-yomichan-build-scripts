@@ -67,8 +67,10 @@ python "$SCRIPT_PATH/parse_jmdict.py"
 
 # create final archives
 DATE="$(date -u +%Y-%m-%d)"
-cd output/opus
-7z a ../../local-yomichan-audio-"$DATE"-opus.7z user_files
-cd ../mp3
-7z a ../../local-yomichan-audio-"$DATE"-mp3.7z user_files
-cd ../..
+#cd output/opus
+#7z a ../../local-yomichan-audio-"$DATE"-opus.7z user_files
+#cd ../mp3
+#7z a ../../local-yomichan-audio-"$DATE"-mp3.7z user_files
+#cd ../..
+tar --numeric-owner --sort=name -I"xz -T0" -cf local-yomichan-audio-collection-"$DATE"-opus.tar.xz -C output/opus user_files
+tar --numeric-owner --sort=name -I"xz -T0" -cf local-yomichan-audio-collection-"$DATE"-mp3.tar.xz -C output/mp3 user_files
