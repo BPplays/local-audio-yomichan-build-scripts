@@ -37,14 +37,18 @@ python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/forvo_files output/mp3/user_files
 rm output/opus/user_files/forvo_files/skent/解く.opus
 rm output/mp3/user_files/forvo_files/skent/解く.mp3
 
-python "$SCRIPT_PATH/ffmpegmulti.py" opus input/shinmeikai8_files output/opus/user_files/shinmeikai8_files
-python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/shinmeikai8_files output/mp3/user_files/shinmeikai8_files
+mkdir -p output/opus/user_files/shinmeikai8_files/media
+mkdir -p output/mp3/user_files/shinmeikai8_files/media
+python "$SCRIPT_PATH/ffmpegmulti.py" opus input/shinmeikai8_files/media output/opus/user_files/shinmeikai8_files/media
+python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/shinmeikai8_files/media output/mp3/user_files/shinmeikai8_files/media
 
 sed 's/.aac/.opus/g' input/shinmeikai8_files/index.json > output/opus/user_files/shinmeikai8_files/index.json
 sed 's/.aac/.mp3/g' input/shinmeikai8_files/index.json > output/mp3/user_files/shinmeikai8_files/index.json
 
-python "$SCRIPT_PATH/ffmpegmulti.py" opus input/nhk16_files output/opus/user_files/nhk16_files
-python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/nhk16_files output/mp3/user_files/nhk16_files
+mkdir -p output/opus/user_files/nhk16_files/audio
+mkdir -p output/mp3/user_files/nhk16_files/audio
+python "$SCRIPT_PATH/ffmpegmulti.py" opus input/nhk16_files/audio output/opus/user_files/nhk16_files/audio
+python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/nhk16_files/audio output/mp3/user_files/nhk16_files/audio
 
 sed 's/.aac/.opus/g' input/nhk16_files/entries.json > output/opus/user_files/nhk16_files/entries.json
 sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16_files/entries.json

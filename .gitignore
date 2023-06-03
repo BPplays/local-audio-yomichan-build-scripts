@@ -13,5 +13,7 @@ input/
 output/
 build/
 temp/
+test/
 
 config.json
+local-yomichan-audio-collection-*.tar.xz
