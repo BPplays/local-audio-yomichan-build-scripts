@@ -43,7 +43,7 @@ Goals of this repo:
 - (done) use jmdict word alternatives to map audio to more words (i.e. all of 手すり・手摺り・手摺 should have the same audio)
     - the alternatives data should be available to the add-on, not to this repo (as it would be part of creating the main database?)
     - see `yomichan_import` / JMdict forms dictionary for reference on parsing the original xml
-- main build script (started: `DRAFT_build_collection.sh`)
+- (done) main build script (`build_collection.sh`)
 - rename repo
 - investigate how much `opus` actually reduces file size for all sources! SMK8 might not have much of an effect
     > for shinmeikai, i initially converted all the files to opus, but decided to keep them in the original format after measuring file sizes and noticing no improvement in size.

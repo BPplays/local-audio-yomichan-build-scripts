@@ -1,7 +1,5 @@
 #!/bin/bash
 
-## THIS HAS NOT BEEN TESTED YET. It's my attempt to collect all the commands that I have run in the building of the collection so far.
-#
 # To start, place all <source>_files inside the input/ directory. It should look like:
 # input/
 #   forvo_files
@@ -67,7 +65,7 @@ cp temp/jpod/index.json output/mp3/user_files/jpod_files/index.json
 refresh_source "JMdict_e"
 python "$SCRIPT_PATH/parse_jmdict.py"
 
-
-
-# TODO create a zip of the outputted folder
-# NOTE: do NOT include `output/jpod/temp_index.json` in the zip
+# create final archives
+DATE="$(date -u +%Y-%m-%d)"
+7z a local-yomichan-audio-"$DATE"-opus.7z -w output/opus output/opus/user_files
+7z a local-yomichan-audio-"$DATE"-mp3.7z -w output/mp3 output/mp3/user_files
