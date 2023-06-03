@@ -57,7 +57,7 @@ def get_config() -> Config:
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("codec", choices=["opus", "mp3"], )
+    parser.add_argument("codec", choices=["opus", "mp3", "aac"], )
     parser.add_argument("input_dir", type=str)
     parser.add_argument("output_dir", type=str)
     parser.add_argument("--quality", type=str, default=None)
@@ -169,6 +169,9 @@ def main():
     elif args.codec == "mp3":
         codec = ".mp3"
         quality = "-q:a 3"
+    elif args.codec == "aac":
+        codec = ".aac"
+        quality = "" # The user should probably specify this
     else:
         raise RuntimeError("this should not be reached")
 
