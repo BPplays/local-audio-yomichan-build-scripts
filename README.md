@@ -29,6 +29,20 @@ Goals of this repo:
     L ...
 ```
 
+## Prerequisites
+This requires a Unix system to run. On Windows, you can use [WSL](https://learn.microsoft.com/en-US/windows/wsl/about).
+
+Dependencies:
+- ffmpeg
+- python
+
+## Usage
+1. Download the original audio files.
+1. Run the following command:
+    ```
+    ./build-collection.sh
+    ```
+
 
 ## TODO
 - (done) run ffmpegmulti on all forvo audio and shinmeikai8 audio
@@ -44,10 +58,29 @@ Goals of this repo:
     - the alternatives data should be available to the add-on, not to this repo (as it would be part of creating the main database?)
     - see `yomichan_import` / JMdict forms dictionary for reference on parsing the original xml
 - (done) main build script (`build_collection.sh`)
-- rename repo
-- investigate how much `opus` actually reduces file size for all sources! SMK8 might not have much of an effect
+- (done) rename repo
+- (done) investigate how much `opus` actually reduces file size for all sources! SMK8 might not have much of an effect
     > for shinmeikai, i initially converted all the files to opus, but decided to keep them in the original format after measuring file sizes and noticing no improvement in size.
     - It should suffice to just compare the mp3 and opus outputs when it's all done
+- (done) get more data for normalization (sentence audio data, compare with output)
 
 ## Credits
-- TODO
+None of this would have even existed if it wasn't for the ideas and work from these fantastic people:
+
+* **[@Mansive](https://github.com/Mansive)**:
+    - Original author of `ffmpegmulti.py`
+    - Jump-started this project entirely by noting that Forvo audio can be improved via mass processed
+* **[@tsweet64](https://github.com/tsweet64)**:
+    - Added `opus` and `mp3` support
+    - Created the general build script
+    - Pointed out that most JPod files were duplicates
+
+There's a lot more stuff that these two did that isn't mentioned here, either because I forgot or it would make the list a bit too long. Thanks again!
+
+
+<!--
+Original discussions (TMW Server)
+* https://discord.com/channels/617136488840429598/1111699416701730871/1111699416701730871
+* https://discord.com/channels/617136488840429598/1074057444365443205/1112936831013617724
+-->
+
