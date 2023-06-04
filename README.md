@@ -8,7 +8,13 @@ Goals of this repo:
 - Normalize the audio
 - Remove silence from the front and back of audio
 - Convert all audio to opus / mp3 (opus for more efficient storage of files, mp3 for better compatibility with AnkiMobile)
-- Remove broken and duplicate files
+- Remove broken and duplicate files:
+    - Remove JPod audio that has different readings mapping to the same audio file
+    - Remove a few audio files that simply didn't have the correct word audio in the first place
+- Create `jmdict_forms.json` for post processing work after creating the entire database
+
+NON-Goals:
+- Reduce the quality of the audio for the sake of more efficient storage
 
 ## Expected File Structure
 ```
