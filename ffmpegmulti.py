@@ -102,7 +102,7 @@ def ffmpeg_crop(file, config: Config):
     returns -ss STARTING_SILENCE_END -to ENDING_SILENCE_START
     or -ss STARTING_SILENCE_END (if ENDING_SILENCE_START doesn't exist)
     """
-    arg_input = f"-i {file}"
+    arg_input = f"-i \"{file}\""
     arg_output = "-f null -"
     arg_filters = f'-af "{config["af_pass"]},{config["af_silence_detect"]}"'
     cmd = f'{config["ffmpeg"]} {arg_input} {arg_filters} {arg_output}'
