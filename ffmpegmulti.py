@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import shlex
-import shutil
 import subprocess
 import sys
 import argparse
@@ -22,7 +21,7 @@ class Config(TypedDict):
 
     # We keep speechnorm=p=0.35 to match similarly to anime dialogue volume
     # Estimated anime mean_volume: -26.6
-    # Estimated anime max_volume = -8.8
+    # Estimated anime max_volume:   -8.8
     # See: https://discord.com/channels/617136488840429598/1074057444365443205/1113704506950172713
     af_norm: str
     af_pass: str
@@ -31,7 +30,7 @@ class Config(TypedDict):
     # d = duration of silence before it is considered as "silence"
     af_silence_detect: str
 
-    # Pads audio compensate for potential inaccuracies
+    # Pads audio to compensate for potential inaccuracies
     # Too small and some voices get cut, too big and not much silence is cut
     silence_compensate: float
 
@@ -186,7 +185,7 @@ def main():
 
     # copy directory tree from source if the dest dir doesn't exist
     if not destination.is_dir():
-        print ("Making destination directories...")
+        print ("-Making destination directories...")
         for dirpath, dirnames, _ in os.walk(forvo):
             for dirname in dirnames:
                 src_dir = os.path.join(dirpath, dirname)
@@ -200,7 +199,7 @@ def main():
     files = [file for file in filter((lambda file: file.is_file()), forvo.rglob("*"))]
     files_total = len(files)
 
-    with ProcessPoolExecutor(max_workers=(cpu_count() -1)) as ex:
+    with ProcessPoolExecutor(max_workers=(cpu_count()-1)) as ex:
         files_count = 0
         for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo), repeat(config), repeat(args.no_normalize), repeat(args.no_silence_remove)):
             print(f"-PROGRESS: {files_count}/{files_total}", end="\r", flush=True)
