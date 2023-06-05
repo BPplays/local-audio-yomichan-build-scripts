@@ -163,6 +163,30 @@ def get_file_volume(file, srcpath, config: Config, seek):
     # remove the crap from the beginning of the output
     output_json = "{" + output[output.find('"input_i"'):]
     ln_stats = json.loads(output_json)
+    # fix invalid values
+    # copied from
+    # https://github.com/slhck/ffmpeg-normalize/blob/78a1363e96d6e592f6b85b89de46648335e0df34/ffmpeg_normalize/_streams.py#LL372C35-L372C41
+
+    for key in [
+        "input_i",
+        "input_tp",
+        "input_lra",
+        "input_thresh",
+        "output_i",
+        "output_tp",
+        "output_lra",
+        "output_thresh",
+        "target_offset",
+    ]:
+        # handle infinite values
+        if float(ln_stats[key]) == -float("inf"):
+            ln_stats[key] = -99
+        elif float(ln_stats[key]) == float("inf"):
+            ln_stats[key] = 0
+        else:
+            # convert to floats
+            ln_stats[key] = float(ln_stats[key])
+
     return f':measured_I={ln_stats["input_i"]}:measured_LRA={ln_stats["input_lra"]}:measured_tp={ln_stats["input_tp"]}:measured_thresh={ln_stats["input_thresh"]}:offset={ln_stats["target_offset"]}'
 
 
