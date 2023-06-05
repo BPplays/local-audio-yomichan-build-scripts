@@ -1,7 +1,7 @@
 {
     "ffmpeg": "ffmpeg",
     "globals": "-loglevel error -y -vn",
-    "af_norm": "speechnorm=p=0.35:e=6.25:r=0.0001:l=1",
+    "af_norm": "loudnorm=I=-23:TP=-8.2",
     "af_pass": "highpass=f=300,asendcmd=0.0 afftdn sn start,asendcmd=1.5 afftdn sn stop,afftdn=nf=-20,dialoguenhance,lowpass=f=3000",
     "af_silence_detect": "silencedetect=n=-50dB:d=0.01,ametadata=print:file=-",
     "silence_compensate": 0.2

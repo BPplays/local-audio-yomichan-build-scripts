@@ -39,7 +39,7 @@ NON-Goals:
 This requires a Unix system to run. On Windows, you can use [WSL](https://learn.microsoft.com/en-US/windows/wsl/about).
 
 Dependencies:
-- ffmpeg (one that can decode aac/mp3, and can encode mp3/opus)
+- ffmpeg >= 6.0 (one that can decode aac/mp3, and can encode mp3/opus)
 - python (3.11+)
 
 ## Usage

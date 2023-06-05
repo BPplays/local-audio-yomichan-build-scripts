@@ -146,13 +146,38 @@ def ffmpeg_crop(file, config: Config):
 
     return sil_end_str + " " + sil_start_str
 
+def get_file_volume(file, srcpath, config: Config, seek):
+    """
+    analyze the volume of a file via loudnorm
+    for perl example see https://github.com/FFmpeg/FFmpeg/blob/master/tools/loudnorm.rb
+    """
+    arg_input = f"-i \"{file}\""
+    arg_output = '-f null -'
+    arg_filters = f'-af "{config["af_norm"]}:print_format=json"'
+    cmd = f'{config["ffmpeg"]} -hide_banner {seek} {arg_input} {arg_filters} {arg_output}'
+
+    output: str = subprocess.run(
+        os_cmd(cmd), text=True, capture_output=True, encoding="utf8"
+    ).stderr
+
+    # remove the crap from the beginning of the output
+    output_json = "{" + output[output.find('"input_i"'):]
+    ln_stats = json.loads(output_json)
+    return f':measured_I={ln_stats["input_i"]}:measured_LRA={ln_stats["input_lra"]}:measured_tp={ln_stats["input_tp"]}:measured_thresh={ln_stats["input_thresh"]}:offset={ln_stats["target_offset"]}'
+
+
 
 def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config, no_normalize, no_silence_remove):
     arg_input = f"-i \"{file}\""
     arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
-    arg_filters = "" if no_normalize else f'-af "{config["af_norm"]}"'
+    #arg_filters = "" if no_normalize else f'-af "{config["af_norm"]}"'
     #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
     seek = "" if no_silence_remove else ffmpeg_crop(file, config)
+    arg_filters = ""
+    if not no_normalize:
+        measured = get_file_volume(file, srcpath, config, seek)
+        arg_filters = f'-af "{config["af_norm"]}{measured}"'
+
     cmd = f'{config["ffmpeg"]} {config["globals"]} {seek} {arg_input} {arg_filters} {quality} {arg_output}'
 
     subprocess.run(os_cmd(cmd))
