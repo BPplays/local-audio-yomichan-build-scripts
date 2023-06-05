@@ -213,7 +213,7 @@ def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config, no_no
         subprocess.run(os_cmd(cmd))
     except Exception as e:
         # effectively skip error if exists
-        print("ERROR ON FILE: " + file)
+        print("ERROR ON FILE:", file)
         traceback.print_exception(e)
 
 
