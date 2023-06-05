@@ -15,7 +15,7 @@ AUDIO_FIELD = "SentenceAudio"
 MEDIA_DIR = "/home/austin/.local/share/Anki2/Japanese/collection.media"
 
 BASE_QUERY = f'"note:{NOTE_TYPE}" -{AUDIO_FIELD}:'
-FFMPEG_CMD = f'ffmpeg -i %s -af volumedetect -f null -'
+FFMPEG_CMD = f'ffmpeg -i "%s" -af volumedetect -f null -'
 
 rx_AUDIO_FILE = re.compile(r'\[sound:(.+)\]')
 # [Parsed_volumedetect_0 @ 0x565118092980] n_samples: 280287
