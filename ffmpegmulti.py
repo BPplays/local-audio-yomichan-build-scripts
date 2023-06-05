@@ -45,6 +45,7 @@ def get_config() -> Config:
 
     # override default config with user config
     if USER_CONFIG.is_file():
+        print("-config.json detected, default_config.json will be overidden ")
         with open(USER_CONFIG) as f:
             user_config = json.load(f)
 
@@ -95,8 +96,8 @@ def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
         # Example output in stdout: lavfi.silence_end=0.541813
         sil_end = float(output[index+offset_start:index+offset_end]) - silence_compensate
     except ValueError as err:  # wtf
-        print(f"Kuru Kuru Kuru Kuru\n{err}")
-        print(f"{output}\n\nsilence_index+12={output[index+12:]}\n")
+        print(f"--[Kuru Kuru Kuru Kuru]--\n{err}\n------")
+        print(f"{output}\n------\nsilence_index+12={output[index+12:]}\n------")
 
     return sil_end
 
@@ -217,6 +218,22 @@ def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config, no_no
         traceback.print_exception(e)
 
 
+def is_supported_audio_file(path):
+    """
+    copy-paste from local-audio-yomichan and jpod_index.py
+    """
+    if not isinstance(path, Path):
+        path = Path(path)
+    if not path.is_file():
+        return False
+    # audio container formats supposedly supported by browsers (excluding webm since it's typically for videos)
+    if path.suffix.lower() not in ['.mp3', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.flac', '.wav']:
+        print(f"(ffmpegmulti) skipping non-audio file: {path}")
+        return False
+
+    return True
+
+
 def main():
     config = get_config()
     args = get_args()
@@ -244,7 +261,7 @@ def main():
 
     # copy directory tree from source if the dest dir doesn't exist
     if not destination.is_dir():
-        print ("-Making destination directories...")
+        print("-Making destination directories...")
         for dirpath, dirnames, _ in os.walk(forvo):
             for dirname in dirnames:
                 src_dir = os.path.join(dirpath, dirname)
@@ -255,7 +272,7 @@ def main():
 
     start = default_timer()
 
-    files = [file for file in filter((lambda file: file.is_file()), forvo.rglob("*"))]
+    files = [file for file in filter(is_supported_audio_file, forvo.rglob("*"))]
     files_total = len(files)
 
     with ProcessPoolExecutor(max_workers=(cpu_count()-1)) as ex:
