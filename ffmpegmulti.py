@@ -6,6 +6,7 @@ import shlex
 import subprocess
 import sys
 import argparse
+import traceback
 from typing import TypedDict
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
@@ -75,6 +76,9 @@ def os_cmd(cmd):
 def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
     """
     spaghetti
+
+    Attemps to parse the output of ffmpeg to get the fp value after str_find.
+    TODO: use regex instead?
     """
     offset_start = len(str_find) + 1 # str_find=
     if output[index+offset_start:index+offset_start+2] == "0\n":
@@ -163,6 +167,7 @@ def get_file_volume(file, srcpath, config: Config, seek):
     # remove the crap from the beginning of the output
     output_json = "{" + output[output.find('"input_i"'):]
     ln_stats = json.loads(output_json)
+
     # fix invalid values
     # copied from
     # https://github.com/slhck/ffmpeg-normalize/blob/78a1363e96d6e592f6b85b89de46648335e0df34/ffmpeg_normalize/_streams.py#LL372C35-L372C41
@@ -192,19 +197,24 @@ def get_file_volume(file, srcpath, config: Config, seek):
 
 
 def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config, no_normalize, no_silence_remove):
-    arg_input = f"-i \"{file}\""
-    arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
-    #arg_filters = "" if no_normalize else f'-af "{config["af_norm"]}"'
-    #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
-    seek = "" if no_silence_remove else ffmpeg_crop(file, config)
-    arg_filters = ""
-    if not no_normalize:
-        measured = get_file_volume(file, srcpath, config, seek)
-        arg_filters = f'-af "{config["af_norm"]}{measured}"'
+    try:
+        arg_input = f"-i \"{file}\""
+        arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
+        #arg_filters = "" if no_normalize else f'-af "{config["af_norm"]}"'
+        #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
+        seek = "" if no_silence_remove else ffmpeg_crop(file, config)
+        arg_filters = ""
+        if not no_normalize:
+            measured = get_file_volume(file, srcpath, config, seek)
+            arg_filters = f'-af "{config["af_norm"]}{measured}"'
 
-    cmd = f'{config["ffmpeg"]} {config["globals"]} {seek} {arg_input} {arg_filters} {quality} {arg_output}'
+        cmd = f'{config["ffmpeg"]} {config["globals"]} {seek} {arg_input} {arg_filters} {quality} {arg_output}'
 
-    subprocess.run(os_cmd(cmd))
+        subprocess.run(os_cmd(cmd))
+    except Exception as e:
+        # effectively skip error if exists
+        print("ERROR ON FILE: " + file)
+        traceback.print_exception(e)
 
 
 def main():
