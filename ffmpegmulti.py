@@ -240,10 +240,10 @@ def main():
 
     if args.codec == "opus":
         codec = ".opus"
-        quality = "-b:a 32k"
+        quality = "-map_metadata -1 -application voip -b:a 32k"
     elif args.codec == "mp3":
         codec = ".mp3"
-        quality = "-q:a 3"
+        quality = "-map_metadata -1 -q:a 3"
     elif args.codec == "aac":
         codec = ".aac"
         quality = "" # The user should probably specify this
