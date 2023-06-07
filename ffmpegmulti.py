@@ -45,7 +45,7 @@ def get_config() -> Config:
 
     # override default config with user config
     if USER_CONFIG.is_file():
-        print("-config.json detected, default_config.json will be overidden ")
+        print("-config.json keys will override their counterparts in default_config.json")
         with open(USER_CONFIG) as f:
             user_config = json.load(f)
 
