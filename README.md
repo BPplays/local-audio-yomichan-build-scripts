@@ -5,13 +5,19 @@ A collection of small scripts to mass-process audio files from the
 Anki Add-on.
 
 Goals of this repo:
-- Normalize the audio
-- Remove silence from the front and back of audio
-- Convert all audio to opus / mp3 (opus for more efficient storage of files, mp3 for better compatibility with AnkiMobile)
-- Remove broken and duplicate files:
-    - Remove JPod audio that has different readings mapping to the same audio file
-    - Remove a few audio files that simply didn't have the correct word audio in the first place
-- Create `jmdict_forms.json` for post processing work after creating the entire database
+- Normalize the audio, in order to standardize the volume across the entire collection.
+- Remove most silence from the front and back of audio.
+- Convert all audio to opus / mp3 (opus for more efficient storage of files, mp3 for better compatibility with AnkiMobile).
+- Remove broken files:
+    - Remove JPod audio that has different readings mapping to the same audio file.
+    - Remove a few audio files that simply didn't have the correct word audio in the first place.
+- Remove duplicate files:
+    - A lot of the JPod audio were simply duplicate files. With `jpod_index.py`, we simply removed these
+        duplicate files and provided a more efficient way of mapping the data to the files.
+- Create `jmdict_forms.json` for post processing work after creating the entire database.
+    This json file allows us to use the JMdict word variants data to fill in missing gaps with words that
+    had the same reading and were simply spelt differently.
+
 
 NON-Goals:
 - Reduce the quality of the audio for the sake of more efficient storage
