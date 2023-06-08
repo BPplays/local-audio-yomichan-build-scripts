@@ -20,11 +20,14 @@ class Config(TypedDict):
     ffmpeg: str
     globals: str
 
-    # We keep speechnorm=p=0.35 to match similarly to anime dialogue volume
-    # Estimated anime mean_volume: -26.6
-    # Estimated anime max_volume:   -8.8
-    # See: https://discord.com/channels/617136488840429598/1074057444365443205/1113704506950172713
+    # Estimated anime mean_volume: -23.5
+    # Estimated anime max_volume:   -7.7
+    # See: https://discord.com/channels/617136488840429598/1074057444365443205/1114388630673301515
+    # Values chosen were based on a mix of personal preference and Google documentation
+    # See: https://developers.google.com/assistant/tools/audio-loudness
     af_norm: str
+
+    # Cleans up audio to improve effectiveness of silencedetect
     af_pass: str
 
     # "ametadata=print:file=-" outputs to stdout
