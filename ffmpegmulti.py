@@ -99,8 +99,8 @@ def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
         # Example output in stdout: lavfi.silence_end=0.541813
         sil_end = float(output[index+offset_start:index+offset_end]) - silence_compensate
     except ValueError as err:  # wtf
-        print(f"--[Kuru Kuru Kuru Kuru]--\n{err}\n------")
-        print(f"{output}\n------\nsilence_index+12={output[index+12:]}\n------")
+        print(f"\n<><>[Kuru Kuru Kuru Kuru]<><>\n{err}\n-OUTPUT BELOW-")
+        print(f"{output}\n\n-silence_index+12-\n{output[index+12:]}\n--------")
 
     return sil_end
 
