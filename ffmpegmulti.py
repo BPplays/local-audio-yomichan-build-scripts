@@ -99,8 +99,8 @@ def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
         # Example output in stdout: lavfi.silence_end=0.541813
         sil_end = float(output[index+offset_start:index+offset_end]) - silence_compensate
     except ValueError as err:  # wtf
-        print(f"\n<><>[Kuru Kuru Kuru Kuru]<><>\n{err}\n-OUTPUT BELOW-")
-        print(f"{output}\n\n-silence_index+12-\n{output[index+12:]}\n--------")
+        print(f"--------\n\n<><>[Kuru Kuru Kuru Kuru]<><>\n{err}\n-OUTPUT-")
+        print(f"{output}\n-silence_index+12-\n{output[index+12:]}\n--------")
 
     return sil_end
 
@@ -281,8 +281,8 @@ def main():
     with ProcessPoolExecutor(max_workers=(cpu_count()-1)) as ex:
         files_count = 0
         for _ in ex.map(ffmpeg_run, files, repeat(codec), repeat(destination), repeat(quality), repeat(forvo), repeat(config), repeat(args.no_normalize), repeat(args.no_silence_remove)):
-            print(f"-PROGRESS: {files_count}/{files_total}", end="\r", flush=True)
             files_count += 1
+            print(f"-PROGRESS: {files_count}/{files_total}", end="\r", flush=True)
 
     elapsed = default_timer() - start
 
