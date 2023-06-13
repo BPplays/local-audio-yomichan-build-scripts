@@ -48,6 +48,21 @@ Dependencies:
 - ffmpeg >= 6.0 (one that can decode aac/mp3, and can encode mp3/opus)
 - python (3.11+)
 
+## Original Audio Files
+
+You'll also need the unprocessed audio files to run this script on.
+
+**Download the files from [this torrent](https://nyaa.si/view/1681653)**.
+Alternatively, use the magnet link below:
+<details><summary>Magnet link</summary>
+
+```
+magnet:?xt=urn:btih:e80dc4b9dd837257a181dd378325e6b433f55071&dn=local-yomichan-audio-collection-2023-06-11-original.tar.xz&tr=http%3a%2f%2fanidex.moe%3a6969%2fannounce&tr=http%3a%2f%2fnyaa.tracker.wf%3a7777%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fopen.stealth.si%3a80%2fannounce&tr=udp%3a%2f%2ftracker.tiny-vps.com%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.moeking.me%3a6969%2fannounce&tr=udp%3a%2f%2fopentracker.i2p.rocks%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.openbittorrent.com%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.torrent.eu.org%3a451%2fannounce&tr=udp%3a%2f%2fexplodie.org%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.zerobytes.xyz%3a1337%2fannounce
+```
+
+</details>
+
+
 ## Usage
 1. Download the original audio files.
 1. Run the following command:
