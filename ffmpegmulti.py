@@ -28,6 +28,7 @@ class Config(TypedDict):
     af_norm: str
 
     # Cleans up audio to improve effectiveness of silencedetect
+    # See: https://superuser.com/a/1727768
     af_pass: str
 
     # "ametadata=print:file=-" outputs to stdout
@@ -99,8 +100,9 @@ def spaghetti(output, index, str_find, silence_compensate) -> Optional[float]:
         # Example output in stdout: lavfi.silence_end=0.541813
         sil_end = float(output[index+offset_start:index+offset_end]) - silence_compensate
     except ValueError as err:  # wtf
-        print(f"--------\n\n<><>[Kuru Kuru Kuru Kuru]<><>\n{err}\n-OUTPUT-")
-        print(f"{output}\n-silence_index+12-\n{output[index+12:]}\n--------")
+        print(f"--------\n\n<><>[Kuru Kuru Kuru Kuru]<><>\n{err}")
+        print(f"Attempted to find {str_find}\n-OUTPUT-{output}")
+        print(f"\n-silence_index+offset-\n{output[index+offset_start:]}\n--------")
 
     return sil_end
 
