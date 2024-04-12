@@ -11,6 +11,7 @@ shinmeikai8_files/
 
 input/
 output/
+output_low_vol/
 build/
 temp/
 test/

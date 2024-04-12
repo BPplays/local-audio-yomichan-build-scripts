@@ -17,9 +17,24 @@ import json
 import shutil
 import hashlib
 import argparse
+import time
+import sys
+import textwrap
+import wcwidth
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict, NewType, NotRequired, Any
+
+import atexit
+
+def disable_cursor():
+    print("\033[?25l", end='', flush=True)  # Disable cursor
+
+def enable_cursor():
+    print("\033[?25h", end='', flush=True)  # Enable cursor
+
+# Register enable_cursor to be called on exit
+atexit.register(enable_cursor)
 
 # TypedDict classes and FileList copied/pasted from AJT Japanese
 
@@ -87,27 +102,115 @@ def is_supported_audio_file(path):
         return False
 
     return True
+LINE_UP = '\033[1A'
+LINE_CLEAR = '\x1b[2K'
 
+def delete_previous_line(lu):
+    # sys.stdout.write('\033[F')  # Move cursor up one line
+    # sys.stdout.write('\033[K')  # Clear the line
+    if lu:
+        print(LINE_UP, end=LINE_CLEAR)
+    else:
+        print(end=LINE_CLEAR)
+    
+    
+def add_newline_every_terminal_width(text):
+    terminal_width = os.get_terminal_size().columns
+    lines = text.split('\n')
+    result = ''
+    for line in lines:
+        line_width = 0
+        for char in line:
+            char_width = wcwidth.wcwidth(char)
+            if char_width < 0:  # Treat control characters as width 0
+                char_width = 0
+            line_width += char_width
+            if line_width >= terminal_width:
+                result += '\n'
+                line_width = char_width
+            result += char
+        result += '\n'
+    return result
 
 def parse_directory(input_dir: str, index: JpodIndex):
     # copy/paste from local audio add-on
-    for path in filter(is_supported_audio_file, Path(input_dir).rglob("*")):
+    path_th = 100
+    loops = 0
+    paths = filter(is_supported_audio_file, Path(input_dir).rglob("*"))
+    print("printing every "+str(path_th)+" files")
+    last_time = 0
+    last_loops = 0
+    pd_print = ""
+    fps = 0
+    last_fps = 0
+    last_path = ""
+    print_path = ""
+    num_lines = 0
+
+    for path in paths:
+        # print(pd_print)
+        
+        if (not fps == last_fps) or (not print_path == last_path):
+            last_path = print_path
+            last_fps = fps
+            # print(LINE_UP, end=LINE_CLEAR)
+            for i in range(num_lines):
+                if i == 0:
+                    delete_previous_line(False)
+                else:
+                    delete_previous_line(True)
+
+            # print("files per second", fps)
+            # print("files per second", fps)
+            # print("path (prints ever 20th)", print_path)
+            terminal_width = shutil.get_terminal_size().columns
+            pd_print = pd_print + "files per second: "+str(fps)+"\n"
+            pd_print = pd_print + "total files: "+str(loops)+"\n"
+            pd_print = pd_print + "path (prints every "+str(path_th)+"): "+str(print_path)
+            # wrapped_textl = textwrap.wrap(pd_print, width=terminal_width-1)
+            # wrapped_text = "\n".join(wrapped_textl)
+            wrapped_text = add_newline_every_terminal_width(pd_print)
+            disable_cursor()
+            print(wrapped_text, end="")
+            num_lines = len(wrapped_text.split('\n'))
+            pd_print = ""
+            
+            
+        
+        # pd_print = ""
+        if loops == 0:
+            last_time = time.time()
+            
+        
+        if time.time() - last_time >= 10:
+            fps = (loops - last_loops) / (time.time() - last_time)
+            last_loops = loops
+            last_time = time.time()
+            # print("files per second", loops_per_sec)
+            
+        
+        loops = loops + 1
         relative_path = str(path.relative_to(Path(input_dir).parent))
         # Remove known broken files
         if relative_path in ("jpod_files/かえる - 蛙.mp3", "jpod_files/きゅうりょうび - 給料日.mp3",
                              "jpod_files/ひとり - 一人.mp3", "jpod_files/くばる - 配る.mp3",
                              "jpod_files/せいえん - 声援.mp3", "jpod_files/こうこく - 広告.mp3"):
-            print(f"Excluding known broken file {relative_path}")
+            # print(f"Excluding known broken file {relative_path}")
+            print_path = f"Excluding known broken file {relative_path}"
             continue
+        elif loops % path_th == 0:
+            # print(path)
+            print_path = path
 
         basename_noext = path.stem
         parts = basename_noext.split(" - ")
 
         # Cannot parse required fields from a filename missing a " - " separator.
         if len(parts) != 2:
-            print(
-                f"(jpod_index) skipping file without ' - ' sep: {relative_path}"
-            )
+            # print(
+            #     f"(jpod_index) skipping file without ' - ' sep: {relative_path}"
+            # )
+            print_path = f"(jpod_index) skipping file without ' - ' sep: {relative_path}"
             continue
         reading, term = parts
 
@@ -129,6 +232,9 @@ def parse_directory(input_dir: str, index: JpodIndex):
                 index[md5] = []
 
             index[md5].append({"term": term, "reading": reading, "file": str(path)})
+    print()
+    
+    
 
 def add_terms_to_ajt_index(terms: list[TermInfo], ajt_index: SourceIndex, md5: str, reading_override: str | None = None):
     assert len(terms) > 0

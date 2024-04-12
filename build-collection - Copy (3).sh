@@ -28,30 +28,30 @@ function refresh_source () {
     fi
 }
 
-    # mkdir -p output/{opus,mp3}/user_files
-    # # run ffmpegmulti script to normalize audio, trim silence from beginning and end, and convert to both opus and mp3.
-    # python "$SCRIPT_PATH/ffmpegmulti.py" opus input/forvo_files output/opus/user_files/forvo_files
-    # # python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/forvo_files output/mp3/user_files/forvo_files
+mkdir -p output/{opus,mp3}/user_files
+# run ffmpegmulti script to normalize audio, trim silence from beginning and end, and convert to both opus and mp3.
+python "$SCRIPT_PATH/ffmpegmulti.py" opus input/forvo_files output/opus/user_files/forvo_files
+# python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/forvo_files output/mp3/user_files/forvo_files
 
-    # # remove broken file
-    # rm output/opus/user_files/forvo_files/skent/解く.flac
-    # # rm output/mp3/user_files/forvo_files/skent/解く.mp3
+# remove broken file
+rm output/opus/user_files/forvo_files/skent/解く.flac
+# rm output/mp3/user_files/forvo_files/skent/解く.mp3
 
-    # mkdir -p output/opus/user_files/shinmeikai8_files/media
-    # # # mkdir -p output/mp3/user_files/shinmeikai8_files/media
-    # python "$SCRIPT_PATH/ffmpegmulti.py" opus input/shinmeikai8_files/media output/opus/user_files/shinmeikai8_files/media
-    # # # python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/shinmeikai8_files/media output/mp3/user_files/shinmeikai8_files/media
+mkdir -p output/opus/user_files/shinmeikai8_files/media
+# # mkdir -p output/mp3/user_files/shinmeikai8_files/media
+python "$SCRIPT_PATH/ffmpegmulti.py" opus input/shinmeikai8_files/media output/opus/user_files/shinmeikai8_files/media
+# # python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/shinmeikai8_files/media output/mp3/user_files/shinmeikai8_files/media
 
-    # sed 's/.aac/.flac/g' input/shinmeikai8_files/index.json > output/opus/user_files/shinmeikai8_files/index.json
-    # # sed 's/.aac/.mp3/g' input/shinmeikai8_files/index.json > output/mp3/user_files/shinmeikai8_files/index.json
+sed 's/.aac/.flac/g' input/shinmeikai8_files/index.json > output/opus/user_files/shinmeikai8_files/index.json
+# sed 's/.aac/.mp3/g' input/shinmeikai8_files/index.json > output/mp3/user_files/shinmeikai8_files/index.json
 
-    # mkdir -p output/opus/user_files/nhk16_files/audio
-    # # mkdir -p output/mp3/user_files/nhk16_files/audio
-    # python "$SCRIPT_PATH/ffmpegmulti.py" opus input/nhk16_files/audio output/opus/user_files/nhk16_files/audio
-    # # python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/nhk16_files/audio output/mp3/user_files/nhk16_files/audio
+mkdir -p output/opus/user_files/nhk16_files/audio
+# mkdir -p output/mp3/user_files/nhk16_files/audio
+python "$SCRIPT_PATH/ffmpegmulti.py" opus input/nhk16_files/audio output/opus/user_files/nhk16_files/audio
+# python "$SCRIPT_PATH/ffmpegmulti.py" mp3 input/nhk16_files/audio output/mp3/user_files/nhk16_files/audio
 
-    # sed 's/.aac/.flac/g' input/nhk16_files/entries.json > output/opus/user_files/nhk16_files/entries.json
-    # # sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16_files/entries.json
+sed 's/.aac/.flac/g' input/nhk16_files/entries.json > output/opus/user_files/nhk16_files/entries.json
+# sed 's/.aac/.mp3/g' input/nhk16_files/entries.json > output/mp3/user_files/nhk16_files/entries.json
 
 # Build an index of the jpod files and remove duplicates
 python "$SCRIPT_PATH/jpod_index.py"

@@ -205,15 +205,20 @@ def get_file_volume(file, srcpath, config: Config, seek):
 def ffmpeg_run(file, codec, destination, quality, srcpath, config: Config, no_normalize, no_silence_remove):
     try:
         arg_input = f"-i \"{file}\""
+        # codec = "flac"
         arg_output = f"\"{destination.joinpath(file.relative_to(srcpath)).with_suffix(codec)}\""
         #arg_filters = "" if no_normalize else f'-af "{config["af_norm"]}"'
         #print(f"The input arg is {arg_input} and the output args to to ffmpeg is {arg_output}")
         seek = "" if no_silence_remove else ffmpeg_crop(file, config)
         arg_filters = ""
+        arg_filters_ls = []
         if not no_normalize:
             measured = get_file_volume(file, srcpath, config, seek)
-            arg_filters = f'-af "{config["af_norm"]}{measured}"'
+            # arg_filters = f'-af "{config["af_norm"]}{measured}"'
+            arg_filters_ls.append(f'{config["af_norm"]}{measured}')
 
+        # arg_filters_ls.append('volume=1.8')
+        arg_filters = "-af " + '"' + ",".join(arg_filters_ls) + '"'
         cmd = f'{config["ffmpeg"]} {config["globals"]} {seek} {arg_input} {arg_filters} {quality} {arg_output}'
 
         subprocess.run(os_cmd(cmd))
@@ -254,6 +259,9 @@ def main():
         quality = "" # The user should probably specify this
     else:
         raise RuntimeError("this should not be reached")
+    
+    codec = ".flac"
+    quality = "-map_metadata -1 -sample_fmt s16"
 
     # overrides default quality with user specified quality, if exists
     if args.quality is not None:
