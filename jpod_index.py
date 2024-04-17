@@ -27,14 +27,19 @@ from typing import TypedDict, NewType, NotRequired, Any
 
 import atexit
 
+loops = 0
 def disable_cursor():
     print("\033[?25l", end='', flush=True)  # Disable cursor
 
 def enable_cursor():
     print("\033[?25h", end='', flush=True)  # Enable cursor
 
+def exit_func():
+    disable_cursor()
+    print(loops)
+
 # Register enable_cursor to be called on exit
-atexit.register(enable_cursor)
+atexit.register(exit_func)
 
 # TypedDict classes and FileList copied/pasted from AJT Japanese
 
@@ -134,7 +139,7 @@ def add_newline_every_terminal_width(text):
 
 def parse_directory(input_dir: str, index: JpodIndex):
     # copy/paste from local audio add-on
-    path_th = 100
+    path_th = 1
     loops = 0
     paths = filter(is_supported_audio_file, Path(input_dir).rglob("*"))
     print("printing every "+str(path_th)+" files")
@@ -194,7 +199,7 @@ def parse_directory(input_dir: str, index: JpodIndex):
         # Remove known broken files
         if relative_path in ("jpod_files/かえる - 蛙.mp3", "jpod_files/きゅうりょうび - 給料日.mp3",
                              "jpod_files/ひとり - 一人.mp3", "jpod_files/くばる - 配る.mp3",
-                             "jpod_files/せいえん - 声援.mp3", "jpod_files/こうこく - 広告.mp3"):
+                             "jpod_files/せいえん - 声援.mp3", "jpod_files/こうこく - 広告.mp3", "jpod_alternate_files/鼻を折る - 鼻を折る.mp3"):
             # print(f"Excluding known broken file {relative_path}")
             print_path = f"Excluding known broken file {relative_path}"
             continue
